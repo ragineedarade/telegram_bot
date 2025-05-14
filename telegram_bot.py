@@ -1,42 +1,97 @@
-import telegram.ext
+ import logging
+from telegram import Update, ReplyKeyboardMarkup
+from telegram.ext import (
+    ApplicationBuilder,
+    CommandHandler,
+    MessageHandler,
+    ContextTypes,
+    filters,
+)
 
-token = "6468250054:AAHVZHvvil19ZiOobdOmKr0JU-ZTUZoBoFQ"
-updater = telegram.ext.updater(token, use_context=True)
-dispatcher = updater.dispatcher
+# Enable logging
+logging.basicConfig(
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s", level=logging.INFO
+)
+logger = logging.getLogger(__name__)
+
+# Main menu
+main_keyboard = ReplyKeyboardMarkup(
+    [
+        ["📰 Latest News", "📞 Contact"],
+        ["👥 Be a Member", "📦 Become Distributor"],
+        ["ℹ️ Help"]
+    ],
+    resize_keyboard=True
+)
+
+# Help submenu
+help_keyboard = ReplyKeyboardMarkup(
+    [
+        ["🏠 Address Issue", "💸 Taking More Charges"],
+        ["📰 Paper Quality Issue", "📆 Weekly Guide Not Available"],
+        ["✅ Submit Your Query"]
+    ],
+    resize_keyboard=True
+)
+
+# /start command
 
 
-def start(update, context):
-    update.message.reply_text("Hello, Welcome")
+async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user = update.effective_user
+    await update.message.reply_text(
+        f"👋 Hello {user.first_name}, welcome to *Raginee Darade Newspaper Bot*! 🗞️\n\n"
+        "Please choose an option below:",
+        reply_markup=main_keyboard
+    )
+
+# General chat handler
 
 
-def help(update, context):
-    update.message.reply_text("""
-        /start -> welcome to the channel
-        /help -> this particular message
-        /content -> about various playlist
-        /portfolio -> about my portfolio
-        /career -> about career life 
-    """)
+async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    text = update.message.text
 
+    # Main menu responses
+    if text == "📰 Latest News":
+        await update.message.reply_text("🗞️ Today’s headline: 'Tech revolution in Madhya Pradesh!' More updates coming soon.")
+    elif text == "📞 Contact":
+        await update.message.reply_text("📞 Contact us at: +91-9584531181\n📧 Email: contactz@newspaper.com")
+    elif text == "👥 Be a Member":
+        await update.message.reply_text("🤝 To become a member, visit: https://newspaper.com/membership")
+    elif text == "📦 Become Distributor":
+        await update.message.reply_text("🚚 To become a distributor, call us at +91-9584531181\n📧 Email: contact@newspaper.com")
 
-def content(update, context):
-    update.message.reply_text("We have many functions and playlists.")
+    # Help submenu trigger
+    elif text == "ℹ️ Help":
+        await update.message.reply_text(
+            "🛠 Please select your issue from the options below:",
+            reply_markup=help_keyboard
+        )
 
+    # Help submenu responses
+    elif text == "🏠 Address Issue":
+        await update.message.reply_text("📍 Please provide the correct delivery address.")
+    elif text == "💸 Taking More Charges":
+        await update.message.reply_text("💰 Sorry for the inconvenience. We’ll investigate the extra charges.")
+    elif text == "📰 Paper Quality Issue":
+        await update.message.reply_text("📄 We regret the quality issue. Please send a photo if possible.")
+    elif text == "📆 Weekly Guide Not Available":
+        await update.message.reply_text("🗓️ Weekly Guide will be sent within 24 hours. Sorry for the delay.")
+    elif text == "✅ Submit Your Query":
+        await update.message.reply_text("📝 Thank you! Your query has been recorded and our support team will reach out soon.")
 
-def portfolio(update, context):
-    update.message.reply_text(
-        "Portfolio link: https://sites.google.com/view/ragineedarade/home")
+    else:
+        await update.message.reply_text("❓ I didn’t understand that. Please use the menu buttons.")
 
+# Run the bot
+if __name__ == "__main__":
+    app = ApplicationBuilder().token(
+        # Replace with your actual token
+        "8153737351:AAEeJhlgnkbJGkxIlOvCLJMU0jCeFpfPfj4").build()
 
-def career(update, context):
-    update.message.reply_text("My YouTube link: https://www.youtube.com/channel/UC3_fYtmeGo51dcImvqsW6cw\n"
-                              "My LinkedIn link:  https://www.linkedin.com/in/raginee-darade/")
+    app.add_handler(CommandHandler("start", start))
+    app.add_handler(MessageHandler(
+        filters.TEXT & ~filters.COMMAND, handle_message))
 
-
-dispatcher.add_handler(telegram.ext.CommandHandler('start', start))
-dispatcher.add_handler(telegram.ext.CommandHandler('help', help))
-dispatcher.add_handler(telegram.ext.CommandHandler('content', content))
-dispatcher.add_handler(telegram.ext.CommandHandler('portfolio', portfolio))
-dispatcher.add_handler(telegram.ext.CommandHandler('career', career))
-updater.start_polling()
-updater.idle()
+    print("🤖 Newspaper Bot is running...")
+    app.run_polling()
